@@ -3,6 +3,7 @@
 namespace RGout\PassportCache;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\ClientRepository;
 use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\TokenRepository;
 
@@ -16,6 +17,10 @@ class CacheServiceProvider extends ServiceProvider
 
         $this->app->singleton(RefreshTokenRepository::class, function () {
             return new CacheRefreshTokenRepository();
+        });
+
+        $this->app->singleton(ClientRepository::class, function () {
+            return new CacheClientRepository();
         });
     }
 }
