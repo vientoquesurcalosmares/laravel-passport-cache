@@ -2,10 +2,8 @@
 
 namespace RGout\PassportCache;
 
-use Illuminate\Support\Collection;
+use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
-use Laravel\Passport\Token;
-use Laravel\Passport\TokenRepository;
 
 class CacheClientRepository extends ClientRepository
 {
@@ -15,7 +13,7 @@ class CacheClientRepository extends ClientRepository
      */
     protected int $cacheTtl = 300;
 
-    public function find($id): ?Token
+    public function find($id): ?Client
     {
         return cache()
             ->remember(
