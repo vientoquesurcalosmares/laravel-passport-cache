@@ -1,6 +1,6 @@
 <?php
 
-namespace RGout\PassportCache;
+namespace RGout\PassportCache\Repositories;
 
 use Illuminate\Support\Collection;
 use Laravel\Passport\Token;
@@ -8,10 +8,13 @@ use Laravel\Passport\TokenRepository;
 
 class CacheTokenRepository extends TokenRepository
 {
-    public function __construct(
-        public readonly string $prefixKey = 'passport:token',
-        public readonly int $cacheTtl = 60,
-    ) {
+    private string $cacheKey;
+    private int $cacheTtl;
+
+    public function __construct()
+    {
+        $this->cacheKey = 'passport:token';
+        $this->cacheTtl = (int)config('passport-cache.token_ttl', 60);
     }
 
     public function find($id): ?Token
@@ -20,7 +23,7 @@ class CacheTokenRepository extends TokenRepository
             ->remember(
                 $this->createKey($id),
                 $this->cacheTtl,
-                fn () => parent::find($id)
+                fn() => parent::find($id)
             );
     }
 
@@ -30,7 +33,7 @@ class CacheTokenRepository extends TokenRepository
             ->remember(
                 $this->createKey($id),
                 $this->cacheTtl,
-                fn () => parent::findForUser($id, $userId)
+                fn() => parent::findForUser($id, $userId)
             );
     }
 
@@ -40,7 +43,7 @@ class CacheTokenRepository extends TokenRepository
             ->remember(
                 $this->createKey($userId),
                 $this->cacheTtl,
-                fn () => parent::forUser($userId)
+                fn() => parent::forUser($userId)
             );
     }
 
@@ -50,19 +53,19 @@ class CacheTokenRepository extends TokenRepository
             ->remember(
                 $this->createKey($user->getKey() . $client->getKey()),
                 $this->cacheTtl,
-                fn () => parent::getValidToken($user, $client)
+                fn() => parent::getValidToken($user, $client)
             );
     }
 
-    public function revokeAccessToken($id)
+    public function revokeAccessToken($id): mixed
     {
         cache()->forget($this->createKey($id));
 
-        parent::revokeAccessToken($id);
+        return parent::revokeAccessToken($id);
     }
 
     protected function createKey($id): string
     {
-        return sprintf('%s:%s', $this->prefixKey, $id);
+        return sprintf('%s:%s', $this->cacheKey, $id);
     }
 }

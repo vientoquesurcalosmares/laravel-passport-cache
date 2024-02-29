@@ -1,6 +1,6 @@
 <?php
 
-namespace RGout\PassportCache;
+namespace RGout\PassportCache\Repositories;
 
 use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshToken;
@@ -8,10 +8,12 @@ use Laravel\Passport\RefreshTokenRepository;
 
 class CacheRefreshTokenRepository extends RefreshTokenRepository
 {
-    public function __construct(
-        public readonly string $prefixKey = 'passport:refresh-token',
-        public readonly int $cacheTtl = 60,
-    ) {
+    private string $cacheKey = 'passport:refresh-token';
+    private int $cacheTtl;
+
+    public function __construct()
+    {
+        $this->cacheTtl = (int)config('passport-cache.refresh_token_ttl', 60);
     }
 
     public function find($id): ?RefreshToken
@@ -20,7 +22,7 @@ class CacheRefreshTokenRepository extends RefreshTokenRepository
             ->remember(
                 $this->createKey($id),
                 $this->cacheTtl,
-                fn () => parent::find($id)
+                fn() => parent::find($id)
             );
     }
 
@@ -37,13 +39,13 @@ class CacheRefreshTokenRepository extends RefreshTokenRepository
             ->query()
             ->where('access_token_id', $tokenId)
             ->get()
-            ->each(fn (RefreshToken $token) => cache()->forget($this->createKey($token->id)));
+            ->each(fn(RefreshToken $token) => cache()->forget($this->createKey($token->id)));
 
         parent::revokeRefreshTokensByAccessTokenId($tokenId);
     }
 
     protected function createKey($id): string
     {
-        return sprintf('%s:%s', $this->prefixKey, $id);
+        return sprintf('%s:%s', $this->cacheKey, $id);
     }
 }
